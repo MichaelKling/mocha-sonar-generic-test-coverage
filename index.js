@@ -1,8 +1,12 @@
 var fs = require('fs'),
 		util = require('util');
+var mkdirp = require('mkdirp');
 
-module.exports = function (runner) {
+var result = "";
 
+module.exports = function (runner, options) {
+	var mochaFile = options.mochaFile || process.env.MOCHA_FILE || 'test-results.xml';
+	
 	var stack = {};
 	var title;
 	runner.on('test end', function(test){
@@ -69,12 +73,20 @@ module.exports = function (runner) {
 			append('	</file>');
 		});
 		append('</unitTest>');
+		
+		
+	
+		mkdirp.sync(path.dirname(filePath));
+		fs.writeFileSync(mochaFile, result, 'utf-8');
 	});
 };
 function append(str) {
 	process.stdout.write(str);
 	process.stdout.write('\n');
+	result += str+"\n";
 };
+
+
 function espape(str){
 	str = str || '';
 	return str.replace(/&/g, '&amp;')
