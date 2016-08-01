@@ -1,14 +1,23 @@
 var fs = require('fs'),
 		util = require('util');
+var path = require('path');
 var mkdirp = require('mkdirp');
 
 var result = "";
 
 module.exports = function (runner, options) {
-	var mochaFile = options.mochaFile || process.env.MOCHA_FILE || 'test-results.xml';
+	if (!options.reporterOptions) { options.reporterOptions = {}; }
+	var mochaFile = options.reporterOptions.mochaFile || process.env.MOCHA_FILE || 'test-results.xml';
 	
 	var stack = {};
 	var title;
+	
+	runner.on('start', function() {
+		if (fs.existsSync(mochaFile)) {
+		  fs.unlinkSync(mochaFile);
+		}
+	});
+  
 	runner.on('test end', function(test){
 		var file = test.file.substr(test.file.indexOf(process.cwd()) + process.cwd().length + 1);
 		stackF = stack[file];
@@ -74,9 +83,8 @@ module.exports = function (runner, options) {
 		});
 		append('</unitTest>');
 		
-		
-	
-		mkdirp.sync(path.dirname(filePath));
+		console.log("Write results to "+mochaFile);
+		mkdirp.sync(path.dirname(mochaFile));
 		fs.writeFileSync(mochaFile, result, 'utf-8');
 	});
 };
